@@ -10,14 +10,39 @@ class SystemSettings extends DBConnection{
 	function check_connection(){
 		return($this->conn);
 	}
-	function load_system_info(){
-		// if(!isset($_SESSION['system_info'])){
-			$sql = "SELECT * FROM system_info";
-			$qry = $this->conn->query($sql);
-				while($row = $qry->fetch_assoc()){
-					$_SESSION['system_info'][$row['meta_field']] = $row['meta_value'];
+	function check_and_import_tables(){
+		try {
+			$check = @$this->conn->query("SHOW TABLES LIKE 'system_info'");
+			if(!$check || $check->num_rows == 0){
+				$sql_path = defined('base_app') ? base_app . 'database/ptms_db.sql' : __DIR__ . '/../database/ptms_db.sql';
+				if(is_file($sql_path)){
+					$sql = file_get_contents($sql_path);
+					if(!empty($sql)){
+						@$this->conn->query("SET FOREIGN_KEY_CHECKS = 0;");
+						if ($this->conn->multi_query($sql)) {
+							do {
+								if ($res = $this->conn->store_result()) {
+									$res->free();
+								}
+							} while ($this->conn->more_results() && $this->conn->next_result());
+						}
+						@$this->conn->query("SET FOREIGN_KEY_CHECKS = 1;");
+					}
 				}
-		// }
+			}
+		} catch (\Throwable $e) {
+			// Silently continue if already imported
+		}
+	}
+	function load_system_info(){
+		$this->check_and_import_tables();
+		$sql = "SELECT * FROM system_info";
+		$qry = $this->conn->query($sql);
+		if($qry){
+			while($row = $qry->fetch_assoc()){
+				$_SESSION['system_info'][$row['meta_field']] = $row['meta_value'];
+			}
+		}
 	}
 	function update_system_info(){
 		$sql = "SELECT * FROM system_info";
