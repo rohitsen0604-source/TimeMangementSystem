@@ -25,10 +25,35 @@ if(!defined('base_url')) {
 if(!defined('base_app')) define('base_app', str_replace('\\','/',__DIR__).'/' );
 if(!defined('dev_data')) define('dev_data',$dev_data);
 
-// Database settings with Environment variable support
-if(!defined('DB_SERVER')) define('DB_SERVER', getenv('DB_SERVER') ?: "127.0.0.1");
-if(!defined('DB_USERNAME')) define('DB_USERNAME', getenv('DB_USERNAME') ?: "ptms_user");
-if(!defined('DB_PASSWORD')) define('DB_PASSWORD', getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : "ptms_pass123");
-if(!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME') ?: "ptms_db");
-if(!defined('DB_PORT')) define('DB_PORT', getenv('DB_PORT') ? (int)getenv('DB_PORT') : 3306);
+// Parse DATABASE_URL / MYSQL_URL if provided (e.g. from Aiven, Railway, etc.)
+$db_url = getenv('DATABASE_URL') ?: getenv('MYSQL_URL');
+$parsed_host = null;
+$parsed_user = null;
+$parsed_pass = null;
+$parsed_db = null;
+$parsed_port = null;
+
+if (!empty($db_url)) {
+    $p = parse_url($db_url);
+    if ($p) {
+        $parsed_host = isset($p['host']) ? $p['host'] : null;
+        $parsed_user = isset($p['user']) ? $p['user'] : null;
+        $parsed_pass = isset($p['pass']) ? $p['pass'] : null;
+        $parsed_port = isset($p['port']) ? (int)$p['port'] : null;
+        $parsed_db   = isset($p['path']) ? ltrim($p['path'], '/') : null;
+    }
+}
+
+// Database settings supporting all common variable names (Aiven, Render, Railway, etc.)
+$db_server = $parsed_host ?: (getenv('DB_SERVER') ?: getenv('DB_HOST') ?: getenv('MYSQL_HOST') ?: getenv('MYSQLHOST') ?: "127.0.0.1");
+$db_user   = $parsed_user ?: (getenv('DB_USERNAME') ?: getenv('DB_USER') ?: getenv('MYSQL_USER') ?: getenv('MYSQLUSER') ?: "ptms_user");
+$db_pass   = $parsed_pass !== null ? $parsed_pass : (getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : (getenv('DB_PASS') !== false ? getenv('DB_PASS') : (getenv('MYSQL_PASSWORD') !== false ? getenv('MYSQL_PASSWORD') : "ptms_pass123")));
+$db_name   = $parsed_db   ?: (getenv('DB_NAME') ?: getenv('DB_DATABASE') ?: getenv('MYSQL_DATABASE') ?: getenv('MYSQLDATABASE') ?: "ptms_db");
+$db_port   = $parsed_port ?: (getenv('DB_PORT') ? (int)getenv('DB_PORT') : (getenv('MYSQL_PORT') ? (int)getenv('MYSQL_PORT') : 3306));
+
+if(!defined('DB_SERVER')) define('DB_SERVER', $db_server);
+if(!defined('DB_USERNAME')) define('DB_USERNAME', $db_user);
+if(!defined('DB_PASSWORD')) define('DB_PASSWORD', $db_pass);
+if(!defined('DB_NAME')) define('DB_NAME', $db_name);
+if(!defined('DB_PORT')) define('DB_PORT', $db_port);
 ?>
