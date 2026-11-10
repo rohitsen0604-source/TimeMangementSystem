@@ -38,10 +38,9 @@ else
 
     echo "Configuring local database permissions..."
     mysql -e "CREATE DATABASE IF NOT EXISTS ptms_db;" 2>/dev/null || true
-    mysql -e "CREATE USER IF NOT EXISTS 'root'@'127.0.0.1' IDENTIFIED BY '';" 2>/dev/null || true
-    mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'127.0.0.1' WITH GRANT OPTION;" 2>/dev/null || true
-    mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;" 2>/dev/null || true
-    mysql -e "FLUSH PRIVILEGES;" 2>/dev/null || true
+    mysql -e "CREATE USER IF NOT EXISTS 'ptms_user'@'%' IDENTIFIED BY 'ptms_pass123';" 2>/dev/null || true
+    mysql -e "ALTER USER 'ptms_user'@'%' IDENTIFIED BY 'ptms_pass123';" 2>/dev/null || true
+    mysql -e "GRANT ALL PRIVILEGES ON ptms_db.* TO 'ptms_user'@'%'; FLUSH PRIVILEGES;" 2>/dev/null || true
 
     # Check if database has tables
     TABLE_COUNT=$(mysql -N -s -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'ptms_db';" 2>/dev/null || echo 0)
