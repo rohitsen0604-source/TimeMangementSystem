@@ -17,6 +17,8 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install -j$(nproc) gd mysqli pdo pdo_mysql \
     && a2enmod rewrite headers \
     && sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf \
+    && echo "mysqli.default_socket = /var/run/mysqld/mysqld.sock" >> /usr/local/etc/php/conf.d/docker-php-ext-mysqli.ini \
+    && echo "pdo_mysql.default_socket = /var/run/mysqld/mysqld.sock" >> /usr/local/etc/php/conf.d/docker-php-ext-pdo_mysql.ini \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy project files from ptms folder to web root
@@ -32,4 +34,3 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 777 /var/www/html/uploads
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-
