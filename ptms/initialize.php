@@ -37,8 +37,8 @@ if (!empty($db_url)) {
     $p = parse_url($db_url);
     if ($p) {
         $parsed_host = isset($p['host']) ? $p['host'] : null;
-        $parsed_user = isset($p['user']) ? $p['user'] : null;
-        $parsed_pass = isset($p['pass']) ? $p['pass'] : null;
+        $parsed_user = isset($p['user']) ? urldecode($p['user']) : null;
+        $parsed_pass = isset($p['pass']) ? urldecode($p['pass']) : null;
         $parsed_port = isset($p['port']) ? (int)$p['port'] : null;
         $parsed_db   = isset($p['path']) ? ltrim($p['path'], '/') : null;
     }
@@ -50,6 +50,12 @@ $db_user   = $parsed_user ?: (getenv('DB_USERNAME') ?: getenv('DB_USER') ?: gete
 $db_pass   = $parsed_pass !== null ? $parsed_pass : (getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : (getenv('DB_PASS') !== false ? getenv('DB_PASS') : (getenv('MYSQL_PASSWORD') !== false ? getenv('MYSQL_PASSWORD') : "ptms_pass123")));
 $db_name   = $parsed_db   ?: (getenv('DB_NAME') ?: getenv('DB_DATABASE') ?: getenv('MYSQL_DATABASE') ?: getenv('MYSQLDATABASE') ?: "ptms_db");
 $db_port   = $parsed_port ?: (getenv('DB_PORT') ? (int)getenv('DB_PORT') : (getenv('MYSQL_PORT') ? (int)getenv('MYSQL_PORT') : 3306));
+
+// Clean whitespace and quotes
+$db_server = trim($db_server, " \t\n\r\0\x0B'\"");
+$db_user   = trim($db_user, " \t\n\r\0\x0B'\"");
+$db_pass   = trim($db_pass, " \t\n\r\0\x0B'\"");
+$db_name   = trim($db_name, " \t\n\r\0\x0B'\"");
 
 if(!defined('DB_SERVER')) define('DB_SERVER', $db_server);
 if(!defined('DB_USERNAME')) define('DB_USERNAME', $db_user);
