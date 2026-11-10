@@ -73,7 +73,7 @@
               </div>
               <div class="row">
                 <div class="col-8">
-                  <a href="<?php echo base_url.'/admin' ?>">Admin Panel</a>
+                  <a href="<?php echo base_url ?>admin/login.php">Admin Panel</a>
                 </div>
                 <!-- /.col -->
                 <div class="col-4">
