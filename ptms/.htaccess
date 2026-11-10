@@ -1,6 +1,10 @@
 <IfModule mod_rewrite.c>
 Header set Access-Control-Allow-Origin "*"
 RewriteEngine on
+
+# Prevent Apache from leaking internal port in directory redirect
+RewriteRule ^admin$ admin/ [R=301,L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$    /index.php/$2/?page=$1   [L]
