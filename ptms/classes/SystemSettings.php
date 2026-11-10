@@ -18,31 +18,20 @@ class SystemSettings extends DBConnection{
 				if(is_file($sql_path)){
 					$sql = file_get_contents($sql_path);
 					if(!empty($sql)){
-						// Remove SQL comments and empty lines
-						$lines = explode("\n", $sql);
-						$clean_sql = '';
-						foreach($lines as $line){
-							$trimmed = trim($line);
-							if($trimmed == '' || strpos($trimmed, '--') === 0 || strpos($trimmed, '/*') === 0 || strpos($trimmed, '#') === 0){
-								continue;
-							}
-							$clean_sql .= $line . "\n";
-						}
-						// Execute statement by statement
-						$queries = explode(";", $clean_sql);
+						@$this->conn->query("SET FOREIGN_KEY_CHECKS = 0;");
+						@$this->conn->query("SET SESSION sql_require_primary_key = 0;");
+						$queries = explode(";", $sql);
 						foreach($queries as $query){
 							$query = trim($query);
-							if(!empty($query)){
-								if(stripos($query, 'START TRANSACTION') === 0 || stripos($query, 'COMMIT') === 0 || stripos($query, 'SET time_zone') === 0){
-									continue;
-								}
+							if(!empty($query) && strpos($query, '--') !== 0){
 								try {
 									$this->conn->query($query);
 								} catch (\Throwable $ex) {
-									// Skip errors on optional/minor statements
+									// Continue with other statements
 								}
 							}
 						}
+						@$this->conn->query("SET FOREIGN_KEY_CHECKS = 1;");
 					}
 				}
 			}
