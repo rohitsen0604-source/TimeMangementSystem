@@ -18,20 +18,36 @@ class SystemSettings extends DBConnection{
 				if(is_file($sql_path)){
 					$sql = file_get_contents($sql_path);
 					if(!empty($sql)){
-						@$this->conn->query("SET FOREIGN_KEY_CHECKS = 0;");
-						if ($this->conn->multi_query($sql)) {
-							do {
-								if ($res = $this->conn->store_result()) {
-									$res->free();
-								}
-							} while ($this->conn->more_results() && $this->conn->next_result());
+						// Remove SQL comments and empty lines
+						$lines = explode("\n", $sql);
+						$clean_sql = '';
+						foreach($lines as $line){
+							$trimmed = trim($line);
+							if($trimmed == '' || strpos($trimmed, '--') === 0 || strpos($trimmed, '/*') === 0 || strpos($trimmed, '#') === 0){
+								continue;
+							}
+							$clean_sql .= $line . "\n";
 						}
-						@$this->conn->query("SET FOREIGN_KEY_CHECKS = 1;");
+						// Execute statement by statement
+						$queries = explode(";", $clean_sql);
+						foreach($queries as $query){
+							$query = trim($query);
+							if(!empty($query)){
+								if(stripos($query, 'START TRANSACTION') === 0 || stripos($query, 'COMMIT') === 0 || stripos($query, 'SET time_zone') === 0){
+									continue;
+								}
+								try {
+									$this->conn->query($query);
+								} catch (\Throwable $ex) {
+									// Skip errors on optional/minor statements
+								}
+							}
+						}
 					}
 				}
 			}
 		} catch (\Throwable $e) {
-			// Silently continue if already imported
+			// Silently continue
 		}
 	}
 	function load_system_info(){

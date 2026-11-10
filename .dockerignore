@@ -1,4 +1,9 @@
 .git
 .github
 README.md
+node_modules
+package.json
+package-lock.json
+import-aiven.js
+import_to_aiven.js
 
